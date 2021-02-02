@@ -1,1 +1,4 @@
 *.elio
+*.npz
+.vscode/
+**/.ipynb_checkpoints/
