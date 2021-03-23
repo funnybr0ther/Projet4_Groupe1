@@ -12,8 +12,8 @@ Nr = int(data['chirp'][3])
 Ts = data['chirp'][4]
 Tr = data['chirp'][5]
 
-x_resol = 20
-y_resol = 20
+x_resol = 200
+y_resol = 200
 
 c = 3*10**8
 lamb = 2*np.pi * c/f0
@@ -54,54 +54,32 @@ data_ant3 -= data_bg3
 # data_ant2 -= calib_ant2
 # data_ant3 -= calib_ant3
 
-# data_ant0 = np.fft.fftshift(data_ant0,axes=(2))
-# data_ant1 = np.fft.fftshift(data_ant1,axes=(2))
-# data_ant2 = np.fft.fftshift(data_ant2,axes=(2))
-# data_ant3 = np.fft.fftshift(data_ant3,axes=(2))
+plt.plot(data_ant0[0].reshape(Ns*Nr,))
+plt.plot(data_ant1[0].reshape(Ns*Nr,))
+# plt.plot(data_ant2[0].reshape(Ns*Nr,))
+# plt.plot(data_ant3[0].reshape(Ns*Nr,))
 
-maxes = np.empty((10,4),dtype='complex128')
+plt.xlim(0,20)
+plt.show()
+data_ant0 = np.fft.fft2(data_ant0,s = (x_resol,y_resol))
+data_ant1 = np.fft.fft2(data_ant1,s = (x_resol,y_resol))
+data_ant2 = np.fft.fft2(data_ant2,s = (x_resol,y_resol))
+data_ant3 = np.fft.fft2(data_ant3,s = (x_resol,y_resol))
+
+
+data_ant0 = np.fft.fftshift(data_ant0,axes=(2))
+data_ant1 = np.fft.fftshift(data_ant1,axes=(2))
+data_ant2 = np.fft.fftshift(data_ant2,axes=(2))
+data_ant3 = np.fft.fftshift(data_ant3,axes=(2))
+
+# data_ant0 = np.flip(data_ant0,axis=1)
+# data_ant1 = np.flip(data_ant0,axis=1)
+# data_ant2 = np.flip(data_ant0,axis=1)
+# data_ant3 = np.flip(data_ant0,axis=1)
+
+
+maxes = np.empty((10,4))
 for i in range(0,10):
-    # C = data_ant0[i]
-    # v = np.linspace(-1,1,C.shape[0])*c/(2*B)
-    # d = np.linspace(0,1,C.shape[1])*( c*  np.pi* 1/Ts * 2 / ( 2 * 2*np.pi * f0 * Ns ) )
-    # X, Y = np.meshgrid(d, v,)
-    # print(X.shape,Y.shape)
-    # fig, ax = plt.subplots()
-    # ax.pcolormesh(X, Y, abs(C))
-    # plt.savefig("def" + str(i) + ".png")
-    # plt.close()
-
-    # C = data_ant0[i]
-    # v = np.linspace(-1,1,C.shape[0])*c/(2*B)
-    # d = np.linspace(0,1,C.shape[1])*( c*  np.pi* 1/Ts * 2 / ( 2 * 2*np.pi * f0 * Ns ) )
-    # X, Y = np.meshgrid(d, v,)
-    # print(X.shape,Y.shape)
-    # fig, ax = plt.subplots()
-    # ax.pcolormesh(X, Y, abs(C))
-    # plt.savefig("ghi" + str(i) + ".png")
-    # plt.close()
-
-    # C = data_ant0[i]
-    # v = np.linspace(-1,1,C.shape[0])*c/(2*B)
-    # d = np.linspace(0,1,C.shape[1])*( c*  np.pi* 1/Ts * 2 / ( 2 * 2*np.pi * f0 * Ns ) )
-    # X, Y = np.meshgrid(d, v,)
-    # print(X.shape,Y.shape)
-    # fig, ax = plt.subplots()
-    # ax.pcolormesh(X, Y, abs(C))
-    # plt.savefig("jkl" + str(i) + ".png")
-    # plt.close()
-
-    # C = data_ant0[i]
-    # v = np.linspace(-1,1,C.shape[0])*c/(2*B)
-    # d = np.linspace(0,1,C.shape[1])*( c*  np.pi* 1/Ts * 2 / ( 2 * 2*np.pi * f0 * Ns ) )
-    # X, Y = np.meshgrid(d, v,)
-    # print(X.shape,Y.shape)
-    # fig, ax = plt.subplots()
-    # ax.pcolormesh(X, Y, abs(C))
-    # plt.savefig("mno" + str(i) + ".png")
-    # plt.close()
-
-
     max0 = 0
     argmax0 = (0,0)
     for j in range(x_resol):
@@ -136,7 +114,7 @@ for i in range(0,10):
 
     tempmaxes = [max0,max1,max2,max3]
     args = [argmax0,argmax1,argmax2,argmax3]
-
+    print(args)
     j = tempmaxes.index(max(tempmaxes))
     print("----")
     temp = np.array([data_ant0[i][args[j][0]][args[j][1]],data_ant1[i][args[j][0]][args[j][1]],data_ant2[i][args[j][0]][args[j][1]],data_ant3[i][args[j][0]][args[j][1]]],dtype='complex128')
@@ -146,10 +124,15 @@ print(maxes)
 Ux = np.linspace(-1,1,x_resol)
 Uy = np.linspace(-1,1,y_resol)
 for i in range(0,10):
-    data_ant = data_ant0[i]
+    data_ant = np.zeros((x_resol,y_resol))
+    for ux in range(x_resol):
+        for uy in range(y_resol):
+            data_ant[ux][uy] = maxes[i][0] + maxes[i][1]* np.exp(-1j * d * Uy[uy])
+            data_ant[ux][uy] += maxes[i][2] * np.exp(-1j * d * Ux[ux])
+            data_ant[ux][uy] += maxes[i][3] * np.exp(-1j * d * Ux[ux] -1j * d * Uy[uy])
     X, Y = np.meshgrid(Ux, Uy,)
     print(X.shape,Y.shape)
     fig, ax = plt.subplots()
-    ax.pcolormesh(X, Y, abs(frame))
+    ax.pcolormesh(X, Y, abs(data_ant))
     plt.savefig("abc" + str(i) + ".png")
     plt.close()
